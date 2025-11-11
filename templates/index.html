@@ -14,12 +14,20 @@
     }
     h1 { color: #2d3748; }
     #reader {
-      width: 250px; /* 🔹 Más pequeño */
+      width: 260px; /* 🔹 Ancho del recuadro */
+      height: 220px; /* 🔹 Menor alto */
       margin: 0 auto;
       border: 2px solid #3182ce;
       border-radius: 10px;
       padding: 10px;
       background: white;
+      overflow: hidden; /* 🔹 Evita que el video se salga */
+    }
+    video {
+      object-fit: cover; /* 🔹 Ajusta el video al contenedor */
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
     }
     #manual-input {
       margin-top: 20px;
@@ -67,14 +75,19 @@
 
   <script>
   const reader = new Html5Qrcode("reader");
-  const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku"; // ✅ endpoint correcto
+  const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku";
+
+  // 🔹 Función para formatear precios (punto de miles, sin decimales)
+  function formatPrice(value) {
+    return value.toLocaleString("es-CO", { minimumFractionDigits: 0 });
+  }
 
   function mostrarResultado(data, sku) {
     if (data.found) {
       document.getElementById("result").innerHTML = `
         <h3>${data.title}</h3>
         <p><b>SKU:</b> ${data.sku}</p>
-        <p><b>Precio:</b> $${data.price}</p>
+        <p><b>Precio:</b> $${formatPrice(Number(data.price))}</p>
       `;
     } else {
       document.getElementById("result").innerHTML = `❌ Producto no encontrado (${sku})`;
@@ -104,8 +117,12 @@
       });
   }
 
-  // 🔹 Escáner más pequeño (180 px)
-  reader.start({ facingMode: "environment" }, { fps: 10, qrbox: 180 }, onScanSuccess);
+  // 🔹 Escáner más compacto y cuadrado
+  reader.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 200, height: 160 } }, // ✅ Más pequeño y menos alto
+    onScanSuccess
+  );
   </script>
 </body>
 </html>
