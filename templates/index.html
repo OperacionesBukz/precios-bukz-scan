@@ -14,12 +14,35 @@
     }
     h1 { color: #2d3748; }
     #reader {
-      width: 320px;
+      width: 250px; /* 🔹 Más pequeño */
       margin: 0 auto;
       border: 2px solid #3182ce;
       border-radius: 10px;
       padding: 10px;
       background: white;
+    }
+    #manual-input {
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      width: 200px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      margin-left: 10px;
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #3182ce;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2b6cb0;
     }
     #result {
       margin-top: 20px;
@@ -29,35 +52,60 @@
 </head>
 <body>
   <h1>📱 Escáner de Precios Bukz</h1>
+
+  <!-- Escáner -->
   <div id="reader"></div>
+
+  <!-- Campo manual -->
+  <div id="manual-input">
+    <p>O ingresa el SKU manualmente:</p>
+    <input type="text" id="skuInput" placeholder="Ej: 9781234567890">
+    <button onclick="buscarSKU()">Buscar</button>
+  </div>
+
   <div id="result"></div>
 
   <script>
   const reader = new Html5Qrcode("reader");
   const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku"; // ✅ endpoint correcto
 
-  function onScanSuccess(decodedText) {
-    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
+  function mostrarResultado(data, sku) {
+    if (data.found) {
+      document.getElementById("result").innerHTML = `
+        <h3>${data.title}</h3>
+        <p><b>SKU:</b> ${data.sku}</p>
+        <p><b>Precio:</b> $${data.price}</p>
+      `;
+    } else {
+      document.getElementById("result").innerHTML = `❌ Producto no encontrado (${sku})`;
+    }
+  }
+
+  function buscarSKU() {
+    const sku = document.getElementById("skuInput").value.trim();
+    if (!sku) return alert("Por favor ingresa un SKU");
     
-    fetch(`${apiURL}?sku=${decodedText}`)  // ✅ usa query param
+    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${sku}`;
+    fetch(`${apiURL}?sku=${sku}`)
       .then(r => r.json())
-      .then(data => {
-        if (data.found) {
-          document.getElementById("result").innerHTML = `
-            <h3>${data.title}</h3>
-            <p><b>SKU:</b> ${data.sku}</p>
-            <p><b>Precio:</b> $${data.price}</p>
-          `;
-        } else {
-          document.getElementById("result").innerHTML = "❌ Producto no encontrado";
-        }
-      })
+      .then(data => mostrarResultado(data, sku))
       .catch(() => {
         document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
       });
   }
 
-  reader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
-</script>
+  function onScanSuccess(decodedText) {
+    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
+    fetch(`${apiURL}?sku=${decodedText}`)
+      .then(r => r.json())
+      .then(data => mostrarResultado(data, decodedText))
+      .catch(() => {
+        document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+      });
+  }
+
+  // 🔹 Escáner más pequeño (180 px)
+  reader.start({ facingMode: "environment" }, { fps: 10, qrbox: 180 }, onScanSuccess);
+  </script>
 </body>
 </html>
