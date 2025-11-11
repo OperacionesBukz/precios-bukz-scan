@@ -34,7 +34,7 @@
 
   <script>
     const reader = new Html5Qrcode("reader");
-    const apiURL = "https://precios-bukz-scan.onrender.com/api/product"; // 👈 Reemplázala con tu URL real
+    const apiURL = "https://precios-bukz-scan.onrender.com/variant"; // 👈 Reemplázala con tu URL real
 
     function onScanSuccess(decodedText) {
       document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
