@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Precios Bukz</title>
+
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
+        h1 { color: #008000; }
+        #reader { width: 100%; max-width: 400px; margin: auto; }
+        #result { margin-top: 20px; font-size: 1.2em; }
+        .price { color: #008000; font-weight: bold; font-size: 1.5em; }
+    </style>
+</head>
+<body>
+    <h1>📚 Consulta de precios Bukz</h1>
+    <p>Escanea el ISBN del libro o ingrésalo manualmente:</p>
+
+    <input id="isbn" type="text" placeholder="Ejemplo: 9781234567890" autofocus>
+    <button onclick="searchISBN()">Buscar</button>
+
+    <div id="reader"></div>
+
+    <div id="result"></div>
+
+    <script>
+        // ✅ Activar cámara
+        const html5QrCode = new Html5Qrcode("reader");
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                html5QrCode.start(
+                    { facingMode: "environment" }, // Usa la cámara trasera en móviles
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        document.getElementById("isbn").value = decodedText;
+                        html5QrCode.stop();
+                        searchISBN();
+                    }
+                );
+            }
+        }).catch(err => {
+            console.error("No se pudo acceder a la cámara:", err);
+        });
+
+        // ✅ Buscar en el backend
+        function searchISBN() {
+            const sku = document.getElementById("isbn").value.trim();
+            if (!sku) return alert("Por favor, ingrese o escanee un ISBN.");
+
+            document.getElementById("result").innerHTML = "Consultando...";
+            fetch(`/api/variant_by_sku?sku=${sku}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.found) {
+                        document.getElementById("result").innerHTML = `
+                            <div><b>${data.title}</b></div>
+                            <div>ISBN: ${data.sku}</div>
+                            <div class="price">$ ${data.price}</div>
+                        `;
+                    } else {
+                        document.getElementById("result").innerHTML = "❌ No se encontró el libro.";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("result").innerHTML = "Error al consultar el servidor.";
+                    console.error(err);
+                });
+        }
+    </script>
+</body>
+</html>
