@@ -4,8 +4,19 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 import requests
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Consulta Precios Bukz")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://ios-bukz-scan.onrender.com",  # tu frontend en Render
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Templates / static
 templates = Jinja2Templates(directory="templates")

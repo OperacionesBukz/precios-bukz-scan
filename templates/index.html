@@ -33,30 +33,31 @@
   <div id="result"></div>
 
   <script>
-    const reader = new Html5Qrcode("reader");
-    const apiURL = "https://precios-bukz-scan.onrender.com/variant"; // 👈 Reemplázala con tu URL real
+  const reader = new Html5Qrcode("reader");
+  const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku"; // ✅ endpoint correcto
 
-    function onScanSuccess(decodedText) {
-      document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
-      fetch(`${apiURL}/${decodedText}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.found) {
-            document.getElementById("result").innerHTML = `
-              <h3>${data.title}</h3>
-              <p><b>SKU:</b> ${data.sku}</p>
-              <p><b>Precio:</b> $${data.price}</p>
-            `;
-          } else {
-            document.getElementById("result").innerHTML = "❌ Producto no encontrado";
-          }
-        })
-        .catch(() => {
-          document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
-        });
-    }
+  function onScanSuccess(decodedText) {
+    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
+    
+    fetch(`${apiURL}?sku=${decodedText}`)  // ✅ usa query param
+      .then(r => r.json())
+      .then(data => {
+        if (data.found) {
+          document.getElementById("result").innerHTML = `
+            <h3>${data.title}</h3>
+            <p><b>SKU:</b> ${data.sku}</p>
+            <p><b>Precio:</b> $${data.price}</p>
+          `;
+        } else {
+          document.getElementById("result").innerHTML = "❌ Producto no encontrado";
+        }
+      })
+      .catch(() => {
+        document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+      });
+  }
 
-    reader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
-  </script>
+  reader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+</script>
 </body>
 </html>
