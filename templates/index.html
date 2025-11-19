@@ -1,192 +1,261 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Escáner de Precios Bukz</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #000000;
-      padding: 30px;
-      color: #ffffff;
+    :root{
+      --bg: #000;
+      --yellow: #F1E800;
+      --muted: #222;
+      --white: #fff;
+    }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--white);
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .wrap {
+      padding:28px 18px 40px;
+      text-align:center;
+      max-width:760px;
+      margin:0 auto;
     }
 
     /* Logo */
-    #logo {
-      width: 180px;
-      margin-bottom: 15px;
-    }
+    #logo { width:180px; margin: 6px auto 14px; display:block; }
 
-    /* Títulos */
-    h1 {
-      color: #F1E800;
-      font-size: 22px;
-      margin-bottom: 5px;
-    }
+    h1 { color:var(--yellow); font-size:22px; margin:6px 0 6px; line-height:1.05; }
+    h2 { color:var(--white); font-weight:700; margin:6px 0 20px; font-size:16px; }
 
-    h2 {
-      font-size: 18px;
-      margin-top: 0;
-      margin-bottom: 25px;
-    }
-
-    /* CONTENEDOR DEL ESCÁNER */
+    /* Reader container */
     #reader {
-      width: 310px;
-      height: 230px;
-      margin: 0 auto;           /* CENTRADO REAL */
-      border: 4px solid #F1E800;
-      border-radius: 14px;
-      background: black;
-      position: relative;
+      width: 92%;
+      max-width: 520px;
+      aspect-ratio: 16 / 10;
+      margin: 0 auto;
+      border: 4px solid var(--yellow);
+      border-radius: 12px;
+      background: #000;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative;
       box-sizing: border-box;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
 
-    /* Ajuste de video */
-    video {
+    /* Force video/canvas to center & cover */
+    #reader video,
+    #reader canvas {
       position: absolute !important;
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
-      object-fit: cover !important;
       width: 100% !important;
       height: 100% !important;
+      object-fit: cover !important;
     }
 
-    /* Esquinas del lector */
+    /* Decorative corners inside the reader */
     .corner {
       position: absolute;
-      width: 55px;
-      height: 55px;
+      width: 56px;
+      height: 56px;
       border: 4px solid #ffffff;
       box-sizing: border-box;
+      pointer-events: none;
     }
+    .tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+    .tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+    .bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+    .br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
-    .tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
-    .tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
-    .bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
-    .br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
-
-    /* Entrada manual */
+    /* Manual input row - aligned horizontally and responsive */
     #manual-input {
       margin-top: 20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
+    #manual-input p { width:100%; margin:0 0 6px 0; text-align:center; }
 
-    input[type="text"] {
-      width: 210px;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 16px;
-      background-color: #222;
-      border: 1px solid #444;
-      color: white;
+    input[type="text"]{
+      min-width:160px;
+      width: 260px;
+      max-width:78%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #444;
+      background:var(--muted);
+      color:var(--white);
+      font-size:15px;
+      box-sizing:border-box;
+      text-align:center;
     }
+    input::placeholder { color:#888; }
 
     button {
-      padding: 10px 18px;
-      font-size: 16px;
-      background-color: #F1E800;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      margin-left: 8px;
-      cursor: pointer;
+      padding:10px 18px;
+      border-radius:10px;
+      background:var(--yellow);
+      color:#000;
+      font-weight:700;
+      border:none;
+      cursor:pointer;
+      min-width:100px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.2);
     }
+    button:active { transform: translateY(1px); }
 
-    #result {
-      margin-top: 25px;
-      font-size: 18px;
+    /* Result area */
+    #result { margin-top:24px; font-size:18px; line-height:1.5; text-align:center; }
+    #result h3 { color:var(--white); margin:6px 0; font-size:18px; }
+    .label { color:var(--white); font-weight:700; }
+    .value { color:var(--yellow); font-weight:700; }
+
+    /* small screens tweak */
+    @media (max-width:420px){
+      .corner { width:46px; height:46px; }
+      #reader { border-radius:10px; }
+      input[type="text"]{ width: 72%; }
     }
-
-    .label { font-weight: bold; }
-    .value { color: #F1E800; font-weight: bold; }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <!-- logo (asegúrate de tener /static/logo.png en tu repo) -->
+    <img id="logo" src="/static/logo.png" alt="Logo Bukz">
 
-  <!-- Logo -->
-  <img id="logo" src="/static/logo.png" alt="Logo Bukz">
+    <h1>Escanea el código de barras del libro aquí</h1>
+    <h2>Sin estrés, sin dramas y sin spoilers</h2>
 
-  <h1>Escanea el código de barras del libro aquí</h1>
-  <h2>Sin estrés, sin dramas y sin spoilers</h2>
+    <!-- reader -->
+    <div id="reader">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+    </div>
 
-  <!-- ESCÁNER -->
-  <div id="reader">
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
+    <!-- manual input -->
+    <div id="manual-input">
+      <p>O ingresa el SKU manualmente:</p>
+      <input type="text" id="skuInput" placeholder="Ej: 9781234567890" inputmode="numeric" pattern="[0-9]*" />
+      <button id="btnSearch" type="button">Buscar</button>
+    </div>
+
+    <div id="result"></div>
   </div>
 
-  <!-- Entrada manual -->
-  <div id="manual-input">
-    <p>O ingresa el SKU manualmente:</p>
-    <input type="text" id="skuInput" placeholder="Ej: 9781234567890">
-    <button onclick="buscarSKU()">Buscar</button>
-  </div>
+  <script>
+    const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku";
+    const reader = new Html5Qrcode("reader");
 
-  <div id="result"></div>
-
-<script>
-  const reader = new Html5Qrcode("reader");
-  const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku";
-
-  function formatPrice(value) {
-    return value.toLocaleString("es-CO");
-  }
-
-  function mostrarResultado(data, sku) {
-    if (data.found) {
-      document.getElementById("result").innerHTML = `
-        <h3>${data.title}</h3>
-        <p><span class="label">SKU:</span> <span class="value">${data.sku}</span></p>
-        <p><span class="label">Precio:</span> <span class="value">$${formatPrice(Number(data.price))}</span></p>
-      `;
-    } else {
-      document.getElementById("result").innerHTML = `❌ Producto no encontrado (${sku})`;
+    // Format numbers with thousands separators and no decimals (es-CO)
+    function formatPrice(value) {
+      try {
+        return Number(value).toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      } catch(e) {
+        return value;
+      }
     }
-  }
 
-  function buscarSKU() {
-    const sku = document.getElementById("skuInput").value.trim();
-    if (!sku) return alert("Por favor ingresa un SKU");
+    function mostrarResultado(data, sku) {
+      if (data && data.found) {
+        document.getElementById("result").innerHTML = `
+          <h3>${escapeHtml(data.title)}</h3>
+          <p><span class="label">SKU:</span> <span class="value">${escapeHtml(data.sku)}</span></p>
+          <p><span class="label">Precio:</span> <span class="value">$${formatPrice(data.price)}</span></p>
+        `;
+      } else {
+        document.getElementById("result").innerHTML = `<p>❌ Producto no encontrado (${escapeHtml(sku)})</p>`;
+      }
+    }
 
-    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${sku}`;
+    function escapeHtml(str){
+      if(str === null || str === undefined) return "";
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
 
-    fetch(`${apiURL}?sku=${sku}`)
-      .then(r => r.json())
-      .then(data => mostrarResultado(data, sku))
-      .catch(() => {
-        document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+    // manual search
+    function buscarSKUManual(){
+      const sku = document.getElementById("skuInput").value.trim();
+      if(!sku) { alert("Por favor ingresa un SKU"); return; }
+      document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${escapeHtml(sku)}`;
+      fetch(`${apiURL}?sku=${encodeURIComponent(sku)}`)
+        .then(r => r.json())
+        .then(data => mostrarResultado(data, sku))
+        .catch(err => {
+          console.error(err);
+          document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+        });
+    }
+
+    document.getElementById("btnSearch").addEventListener("click", buscarSKUManual);
+    document.getElementById("skuInput").addEventListener("keydown", function(e){
+      if(e.key === "Enter") buscarSKUManual();
+    });
+
+    // debounce to avoid repeated identical calls
+    let lastScanned = "";
+    let scanCooldown = null;
+
+    function onScanSuccess(decodedText) {
+      if (decodedText === lastScanned) return;
+      lastScanned = decodedText;
+      clearTimeout(scanCooldown);
+      scanCooldown = setTimeout(()=> lastScanned = "", 1500);
+
+      document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${escapeHtml(decodedText)}`;
+      fetch(`${apiURL}?sku=${encodeURIComponent(decodedText)}`)
+        .then(r => r.json())
+        .then(data => mostrarResultado(data, decodedText))
+        .catch(err => {
+          console.error(err);
+          document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+        });
+    }
+
+    // Start scanner with fallback
+    function startScanner() {
+      const readerEl = document.getElementById("reader");
+      const rW = Math.round(readerEl.getBoundingClientRect().width);
+      const qrW = Math.max(180, Math.min(rW - 40, 420));
+      const qrH = Math.round(qrW * 0.6);
+
+      reader.start(
+        { facingMode: { exact: "environment" } },
+        { fps: 10, qrbox: { width: qrW, height: qrH } },
+        onScanSuccess
+      ).catch(err => {
+        // fallback if exact constraint not supported
+        reader.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: qrW, height: qrH } },
+          onScanSuccess
+        ).catch(e => {
+          console.warn("No se pudo iniciar la cámara:", e);
+          document.getElementById("result").innerHTML = "⚠️ No fue posible acceder a la cámara. Revisa permisos o usa la búsqueda manual.";
+        });
       });
-  }
+    }
 
-  function onScanSuccess(decodedText) {
-    document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${decodedText}`;
-
-    fetch(`${apiURL}?sku=${decodedText}`)
-      .then(r => r.json())
-      .then(data => mostrarResultado(data, decodedText))
-      .catch(() => {
-        document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
-      });
-  }
-
-  reader.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 280, height: 170 } },
-    onScanSuccess
-  );
-</script>
-
+    window.addEventListener("load", () => startScanner());
+    window.addEventListener("resize", () => {
+      // restart scanner on resize to recalculate qrbox
+      reader.stop().then(()=> startScanner()).catch(()=> startScanner());
+    });
+  </script>
 </body>
 </html>
-
