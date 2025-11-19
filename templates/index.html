@@ -40,7 +40,7 @@
     #reader {
       width: 305px;
       height: 220px;
-      margin: 0;
+      margin: 0 auto;
       border: 2px solid #F1E800;
       border-radius: 10px;
       background: black;
@@ -50,6 +50,7 @@
       align-items: center;
       justify-content: center;
     }
+
     video {
       position: absolute !important;
       top: 50% !important;
@@ -58,6 +59,54 @@
       object-fit: cover !important;
       width: 100% !important;
       height: 100% !important;
+    }
+
+    /* 🔹 Esquinas decorativas */
+    #reader::before,
+    #reader::after {
+      content: "";
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 5px solid #ffffff;
+      border-radius: 4px;
+    }
+
+    #reader::before {
+      top: 10px;
+      left: 10px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    #reader::after {
+      top: 10px;
+      right: 10px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    #reader .bottom-left,
+    #reader .bottom-right {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 5px solid #ffffff;
+      border-radius: 4px;
+    }
+
+    #reader .bottom-left {
+      bottom: 10px;
+      left: 10px;
+      border-right: none;
+      border-top: none;
+    }
+
+    #reader .bottom-right {
+      bottom: 10px;
+      right: 10px;
+      border-left: none;
+      border-top: none;
     }
 
     #manual-input {
@@ -124,7 +173,10 @@
   <h2>Sin estrés, sin dramas y sin spoilers</h2>
 
   <!-- Escáner -->
-  <div id="reader"></div>
+  <div id="reader">
+    <div class="bottom-left"></div>
+    <div class="bottom-right"></div>
+  </div>
 
   <!-- Campo manual -->
   <div id="manual-input">
@@ -186,3 +238,4 @@
   </script>
 </body>
 </html>
+
