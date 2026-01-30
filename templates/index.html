@@ -279,32 +279,21 @@
     function startScanner() {
       const readerEl = document.getElementById("reader");
       const rW = Math.round(readerEl.getBoundingClientRect().width);
-      // Área de escaneo más pequeña y optimizada para códigos de barras
-      const qrW = Math.min(rW - 60, 340);
-      const qrH = Math.round(qrW * 0.35); // Más rectangular para códigos de barras
+      // Área de escaneo optimizada para códigos de barras (más rectangular)
+      const qrW = Math.min(rW - 60, 360);
+      const qrH = Math.round(qrW * 0.4); // Más rectangular para códigos de barras
 
       const config = {
-        fps: 30, // 3x más rápido
-        qrbox: { width: qrW, height: qrH },
-        aspectRatio: 1.777778, // 16:9 para mejor rendimiento
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.QR_CODE
-        ]
+        fps: 20, // Mejor balance entre velocidad y compatibilidad
+        qrbox: { width: qrW, height: qrH }
       };
 
-      const cameraConfig = {
-        facingMode: { exact: "environment" },
-        advanced: [{ focusMode: "continuous" }] // Auto-foco continuo
-      };
-
-      reader.start(cameraConfig, config, onScanSuccess).catch(err => {
-        // fallback sin exact constraint
+      reader.start(
+        { facingMode: { exact: "environment" } },
+        config,
+        onScanSuccess
+      ).catch(err => {
+        // fallback if exact constraint not supported
         reader.start(
           { facingMode: "environment" },
           config,
