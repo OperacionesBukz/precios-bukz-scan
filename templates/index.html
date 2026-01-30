@@ -85,27 +85,6 @@
     .bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
     .br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
-    /* Pause message overlay */
-    #pauseMessage {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: var(--gray);
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      z-index: 10;
-      display: none;
-      pointer-events: none;
-    }
-
-    #pauseMessage.active {
-      display: block;
-    }
-
     /* Manual input row - aligned horizontally and responsive */
     #manual-input {
       margin-top: 20px;
@@ -173,7 +152,6 @@
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
-      <div id="pauseMessage">⏸ Escáner pausado...</div>
     </div>
 
     <!-- manual input -->
@@ -205,8 +183,10 @@
 
     function pauseScanner() {
       scannerPaused = true;
-      document.getElementById("reader").classList.add("paused");
-      document.getElementById("pauseMessage").classList.add("active");
+      const readerEl = document.getElementById("reader");
+      if (readerEl) {
+        readerEl.classList.add("paused");
+      }
       
       // Limpiar timeout anterior si existe
       if (pauseTimeout) {
@@ -216,8 +196,9 @@
       // Reactivar después de 2.5 segundos
       pauseTimeout = setTimeout(() => {
         scannerPaused = false;
-        document.getElementById("reader").classList.remove("paused");
-        document.getElementById("pauseMessage").classList.remove("active");
+        if (readerEl) {
+          readerEl.classList.remove("paused");
+        }
         lastScanned = ""; // Resetear para permitir re-escaneo
       }, 2500);
     }
