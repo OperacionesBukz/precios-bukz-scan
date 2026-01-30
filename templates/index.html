@@ -12,6 +12,7 @@
       --yellow: #F1E800;
       --muted: #222;
       --white: #fff;
+      --gray: #555;
     }
 
     html,body{
@@ -51,6 +52,11 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      transition: border-color 0.3s ease;
+    }
+
+    #reader.paused {
+      border-color: var(--gray);
     }
 
     /* Force video/canvas to center & cover */
@@ -78,6 +84,27 @@
     .tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
     .bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
     .br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+    /* Pause message overlay */
+    #pauseMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: var(--gray);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 10;
+      display: none;
+      pointer-events: none;
+    }
+
+    #pauseMessage.active {
+      display: block;
+    }
 
     /* Manual input row - aligned horizontally and responsive */
     #manual-input {
@@ -146,6 +173,7 @@
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
+      <div id="pauseMessage">⏸ Escáner pausado...</div>
     </div>
 
     <!-- manual input -->
@@ -161,6 +189,10 @@
   <script>
     const apiURL = "https://precios-bukz-scan.onrender.com/api/variant_by_sku";
     const reader = new Html5Qrcode("reader");
+    
+    // Estado del escáner
+    let scannerPaused = false;
+    let pauseTimeout = null;
 
     // Format numbers with thousands separators and no decimals (es-CO)
     function formatPrice(value) {
@@ -171,6 +203,25 @@
       }
     }
 
+    function pauseScanner() {
+      scannerPaused = true;
+      document.getElementById("reader").classList.add("paused");
+      document.getElementById("pauseMessage").classList.add("active");
+      
+      // Limpiar timeout anterior si existe
+      if (pauseTimeout) {
+        clearTimeout(pauseTimeout);
+      }
+      
+      // Reactivar después de 2.5 segundos
+      pauseTimeout = setTimeout(() => {
+        scannerPaused = false;
+        document.getElementById("reader").classList.remove("paused");
+        document.getElementById("pauseMessage").classList.remove("active");
+        lastScanned = ""; // Resetear para permitir re-escaneo
+      }, 2500);
+    }
+
     function mostrarResultado(data, sku) {
       if (data && data.found) {
         document.getElementById("result").innerHTML = `
@@ -178,8 +229,11 @@
           <p><span class="label">SKU:</span> <span class="value">${escapeHtml(data.sku)}</span></p>
           <p><span class="label">Precio:</span> <span class="value">$${formatPrice(data.price)}</span></p>
         `;
+        // Pausar escáner solo cuando se encuentra el producto
+        pauseScanner();
       } else {
         document.getElementById("result").innerHTML = `<p>❌ Producto no encontrado (${escapeHtml(sku)})</p>`;
+        // No pausar cuando no se encuentra
       }
     }
 
@@ -212,6 +266,9 @@
     let scanCooldown = null;
 
     function onScanSuccess(decodedText) {
+      // Ignorar escaneos si el escáner está pausado
+      if (scannerPaused) return;
+      
       if (decodedText === lastScanned) return;
       lastScanned = decodedText;
       clearTimeout(scanCooldown);
