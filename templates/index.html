@@ -248,11 +248,16 @@
       if(!sku) { alert("Por favor ingresa un SKU"); return; }
       document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${escapeHtml(sku)}`;
       fetch(`${apiURL}?sku=${encodeURIComponent(sku)}`)
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+          }
+          return r.json();
+        })
         .then(data => mostrarResultado(data, sku))
         .catch(err => {
-          console.error(err);
-          document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+          console.error("Error completo:", err);
+          document.getElementById("result").innerHTML = `⚠️ Error consultando el servidor: ${err.message}`;
         });
     }
 
@@ -276,11 +281,16 @@
 
       document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${escapeHtml(decodedText)}`;
       fetch(`${apiURL}?sku=${encodeURIComponent(decodedText)}`)
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+          }
+          return r.json();
+        })
         .then(data => mostrarResultado(data, decodedText))
         .catch(err => {
-          console.error(err);
-          document.getElementById("result").innerHTML = "⚠️ Error consultando el servidor";
+          console.error("Error completo:", err);
+          document.getElementById("result").innerHTML = `⚠️ Error consultando el servidor: ${err.message}`;
         });
     }
 
