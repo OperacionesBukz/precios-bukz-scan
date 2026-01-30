@@ -11,7 +11,8 @@ app = FastAPI(title="Consulta Precios Bukz")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://ios-bukz-scan.onrender.com",  # tu frontend en Render
+        "https://precios-bukz-scan.onrender.com",  # URL correcta del frontend
+        "https://ios-bukz-scan.onrender.com",  # URL anterior (por si acaso)
     ],
     allow_credentials=True,
     allow_methods=["*"],
