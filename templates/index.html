@@ -219,11 +219,12 @@
       return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
-    // manual search
+    // manual search — pausa cámara durante fetch para no saturar el JS thread en iPhone
     function buscarSKUManual(){
       const sku = document.getElementById("skuInput").value.trim();
       if(!sku) { alert("Por favor ingresa un SKU"); return; }
       document.getElementById("result").innerHTML = `⏳ Consultando SKU: ${escapeHtml(sku)}`;
+      pauseScanner();
       fetch(`${apiURL}?sku=${encodeURIComponent(sku)}`)
         .then(r => {
           if (!r.ok) {
@@ -286,14 +287,20 @@
     }
 
     function startScanner() {
-      const readerEl = document.getElementById("reader");
-      const rW = Math.round(readerEl.getBoundingClientRect().width);
-      const qrW = Math.min(rW - 60, 360);
-      const qrH = Math.round(qrW * 0.4);
-
+      // Sin qrbox: la librería escanea TODO el frame visible. Evita el desalineamiento
+      // entre lo que el usuario ve (object-fit: cover) y la región que se procesa.
+      // formatsToSupport prioriza códigos de libros: EAN-13/8, UPC-A/E, Code-128, QR.
       const config = {
-        fps: 20,
-        qrbox: { width: qrW, height: qrH }
+        fps: 10,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ]
       };
 
       // Patrón canónico para iOS Safari: enumerar cámaras y arrancar con deviceId
