@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Escáner de Precios Bukz</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root{
@@ -59,16 +59,12 @@
       border-color: var(--gray);
     }
 
-    /* Force video/canvas to center & cover */
+    /* Video/canvas centrado — sin !important para no pisar el layout de html5-qrcode */
     #reader video,
     #reader canvas {
-      position: absolute !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* Decorative corners inside the reader */
@@ -288,27 +284,32 @@
         qrbox: { width: qrW, height: qrH }
       };
 
+      // `ideal` (no `exact`) — iOS Safari rechaza `exact` con frecuencia.
       reader.start(
-        { facingMode: { exact: "environment" } },
+        { facingMode: { ideal: "environment" } },
         config,
         onScanSuccess
       ).catch(err => {
-        // fallback if exact constraint not supported
-        reader.start(
-          { facingMode: "environment" },
-          config,
-          onScanSuccess
-        ).catch(e => {
-          console.warn("No se pudo iniciar la cámara:", e);
-          document.getElementById("result").innerHTML = "⚠️ No fue posible acceder a la cámara. Revisa permisos o usa la búsqueda manual.";
-        });
+        console.warn("No se pudo iniciar la cámara:", err);
+        document.getElementById("result").innerHTML = "⚠️ No fue posible acceder a la cámara. Revisa permisos o usa la búsqueda manual.";
       });
     }
 
     window.addEventListener("load", () => startScanner());
+
+    // Reinicio en resize SOLO si cambia el ancho de forma significativa.
+    // En iPhone, Safari dispara `resize` cada vez que la barra de URL se
+    // contrae/expande con el scroll (cambia solo el alto), lo que reiniciaba
+    // la cámara constantemente e impedía decodificar.
+    let lastViewportWidth = window.innerWidth;
+    let resizeDebounce = null;
     window.addEventListener("resize", () => {
-      // restart scanner on resize to recalculate qrbox
-      reader.stop().then(()=> startScanner()).catch(()=> startScanner());
+      if (Math.abs(window.innerWidth - lastViewportWidth) < 50) return;
+      lastViewportWidth = window.innerWidth;
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(() => {
+        reader.stop().then(()=> startScanner()).catch(()=> startScanner());
+      }, 300);
     });
   </script>
 </body>
