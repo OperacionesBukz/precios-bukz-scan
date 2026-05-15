@@ -272,26 +272,49 @@
     }
 
     // Start scanner with fallback
+    // Muestra el error real en pantalla — sin Mac no hay forma de ver consola en iPhone.
+    function mostrarErrorCamara(etapa, err) {
+      const msg = (err && (err.name || err.message))
+        ? `${err.name || "Error"}: ${err.message || err}`
+        : String(err);
+      console.warn(`[${etapa}]`, err);
+      document.getElementById("result").innerHTML = `
+        <p>⚠️ Cámara no disponible (${escapeHtml(etapa)}).</p>
+        <p style="font-size:13px;color:#bbb;word-break:break-word;">${escapeHtml(msg)}</p>
+        <p style="font-size:13px;">Usa la búsqueda manual mientras tanto.</p>
+      `;
+    }
+
     function startScanner() {
       const readerEl = document.getElementById("reader");
       const rW = Math.round(readerEl.getBoundingClientRect().width);
-      // Área de escaneo optimizada para códigos de barras (más rectangular)
       const qrW = Math.min(rW - 60, 360);
-      const qrH = Math.round(qrW * 0.4); // Más rectangular para códigos de barras
+      const qrH = Math.round(qrW * 0.4);
 
       const config = {
-        fps: 20, // Mejor balance entre velocidad y compatibilidad
+        fps: 20,
         qrbox: { width: qrW, height: qrH }
       };
 
-      // `ideal` (no `exact`) — iOS Safari rechaza `exact` con frecuencia.
-      reader.start(
-        { facingMode: { ideal: "environment" } },
-        config,
-        onScanSuccess
-      ).catch(err => {
-        console.warn("No se pudo iniciar la cámara:", err);
-        document.getElementById("result").innerHTML = "⚠️ No fue posible acceder a la cámara. Revisa permisos o usa la búsqueda manual.";
+      // Patrón canónico para iOS Safari: enumerar cámaras y arrancar con deviceId
+      // explícito. iOS responde mejor a `deviceId` que a `facingMode`.
+      Html5Qrcode.getCameras().then(cameras => {
+        if (!cameras || cameras.length === 0) {
+          mostrarErrorCamara("getCameras", new Error("No se detectaron cámaras"));
+          return;
+        }
+
+        // Buscar la trasera por nombre; si no, usar la última (suele ser la trasera en iOS).
+        const trasera = cameras.find(c => /back|rear|environment|trasera/i.test(c.label));
+        const cam = trasera || cameras[cameras.length - 1];
+
+        reader.start(cam.id, config, onScanSuccess)
+          .catch(err => mostrarErrorCamara("start(deviceId)", err));
+      }).catch(err => {
+        // Si getCameras falla (suele ser por permiso no concedido todavía),
+        // intento el camino antiguo con facingMode.
+        reader.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess)
+          .catch(err2 => mostrarErrorCamara("getCameras+fallback", err2));
       });
     }
 
